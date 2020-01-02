@@ -91,7 +91,18 @@
         </v-card>
 
         <v-card class="mt-5">
-          <v-card-title>History</v-card-title>
+          <v-card-title>
+            <span>History</span>
+            <v-spacer />
+            <v-tooltip v-if="history.length > 0" right>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" color="green" icon @click="saveFileAsJson(history)">
+                  <v-icon>mdi-download</v-icon>
+                </v-btn>
+              </template>
+              <span>Download</span>
+            </v-tooltip>
+          </v-card-title>
           <v-card-text>
             <v-row v-if="history.length > 0">
               <v-col class="my-0 py-0 d-flex flex-row align-center" cols="12">
@@ -112,7 +123,7 @@
               <v-col class="my-0 py-0" cols="12" v-for="(item, i) in history" :key="i">
                 <div class="d-flex flex-row align-center">
                   <span class="ms-1 caption" v-text="item.time" />
-                  <span class="ms-5 caption" v-text="caculateAvg(i)" />
+                  <span class="ms-5 caption" v-text="item.average" />
                   <v-spacer />
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
@@ -216,7 +227,7 @@
               <div class="mt-2 px-5 mb-2 d-flex flex-row justify-space-between align-center">
                 <div
                   class="me-5 d-flex flex-column align-center"
-                  v-for="(item, i) in history[selectedHistoryIndex].devations"
+                  v-for="(item, i) in history[selectedHistoryIndex].deviations"
                   :key="i"
                 >
                   <span class="caption" v-text="purposeList[i]" />
@@ -444,7 +455,7 @@ export default {
     onRemoveHistory(index) {
       this.history.splice(index, 1);
     },
-    addNewHistory(devations) {
+    addNewHistory(deviations) {
       let date = new Date();
       let hours = date.getHours();
       let mins = date.getMinutes();
@@ -460,10 +471,18 @@ export default {
         secs = `0${secs}`;
       }
       let time = `${hours}:${mins}:${secs}`;
+
+      let sum = 0;
+      for (let deviation of deviations) {
+        sum += parseFloat(deviation);
+      }
+      let avg =  (sum / deviations.length).toFixed(2);
+
       let h = {
         time: time,
         rules: JSON.parse(JSON.stringify(this.rules)),
-        devations: devations
+        average: avg,
+        deviations: deviations
       };
       this.history.splice(0, 0, h);
     },
@@ -559,20 +578,20 @@ export default {
       }
 
       // Calculate RMSE
-      let devations = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let deviations = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       for (let row of t) {
         for (let i in row) {
-          devations[i] += parseFloat(row[i]);
+          deviations[i] += parseFloat(row[i]);
         }
       }
 
-      for (let i in devations) {
-        devations[i] = devations[i] / t.length;
-        devations[i] = Math.sqrt(devations[i]).toFixed(2);
+      for (let i in deviations) {
+        deviations[i] = deviations[i] / t.length;
+        deviations[i] = Math.sqrt(deviations[i]).toFixed(2);
       }
 
       if (!isHistory) {
-        this.addNewHistory(devations);
+        this.addNewHistory(deviations);
       }
 
       // Filter Selected Purposes
@@ -644,15 +663,34 @@ export default {
       this.onRun(true);
     },
     onSelectedPurposesChange() {
-      // this.drawSummarizes();
       this.onRun(true);
     },
-    caculateAvg(index) {
-      let sum = 0;
-      for (let devation of this.history[index].devations) {
-        sum += parseFloat(devation);
-      }
-      return (sum / this.history[index].devations.length).toFixed(2);
+    saveFileAsJson(obj) {
+      const data = JSON.stringify(obj);
+      const blob = new Blob([data], { type: "text/plain" });
+      const e = document.createEvent("MouseEvents");
+      const a = document.createElement("a");
+      a.download = "history.json";
+      a.href = window.URL.createObjectURL(blob);
+      a.dataset.downloadurl = ["text/json", a.download, a.href].join(":");
+      e.initEvent(
+        "click",
+        true,
+        false,
+        window,
+        0,
+        0,
+        0,
+        0,
+        0,
+        false,
+        false,
+        false,
+        false,
+        0,
+        null
+      );
+      a.dispatchEvent(e);
     }
   },
   created() {

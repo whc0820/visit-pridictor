@@ -46,7 +46,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in rules" :key="item.months">
+                  <tr v-for="(item, i) in rules" :key="i">
                     <td v-text="item.months" />
                     <td v-text="item.weight" />
                     <td>

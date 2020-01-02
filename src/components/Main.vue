@@ -35,54 +35,50 @@
               <span>Add</span>
             </v-tooltip>
           </v-card-title>
-          <v-card-text v-if="rules.length > 0">
-            <v-row class="px-1">
-              <v-col class="my-0 py-0" cols="2">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon v-on="on" small>mdi-calendar</v-icon>
-                  </template>
-                  <span>Months Before</span>
-                </v-tooltip>
-              </v-col>
-              <v-col class="my-0 py-0" cols="2">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon v-on="on" small>mdi-star-half</v-icon>
-                  </template>
-                  <span>Weight</span>
-                </v-tooltip>
-              </v-col>
-            </v-row>
-            <v-row v-for="(item, i) in rules" :key="i">
-              <v-col class="ms-2 my-0 py-0 d-flex align-center" cols="2">
-                <span class="caption" v-text="rules[i].months" />
-              </v-col>
-              <v-col class="my-0 py-0 d-flex align-center" cols="2">
-                <span class="caption" v-text="rules[i].weight" />
-              </v-col>
-              <v-spacer class="mx-0 px-0" />
-              <v-tooltip right>
-                <template v-slot:activator="{ on }">
-                  <v-btn color="blue" v-on="on" icon small @click="onEditRule(i)">
-                    <v-icon small>mdi-pencil</v-icon>
-                  </v-btn>
-                </template>
-                <span>Edit</span>
-              </v-tooltip>
-              <v-tooltip right>
-                <template v-slot:activator="{ on }">
-                  <v-btn class="me-4" v-on="on" color="red" icon small @click="onRemoveRule(i)">
-                    <v-icon small>mdi-close</v-icon>
-                  </v-btn>
-                </template>
-                <span>Remove</span>
-              </v-tooltip>
-
-              <v-col class="my-0 py-0" cols="12">
-                <v-divider />
-              </v-col>
-            </v-row>
+          <v-card-text>
+            <v-simple-table v-if="rules.length > 0" height="150" fixed-header dense>
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th class="text-left">Months Before</th>
+                    <th class="text-left">Weight</th>
+                    <th class>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in rules" :key="item.months">
+                    <td v-text="item.months" />
+                    <td v-text="item.weight" />
+                    <td>
+                      <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                          <v-btn color="blue" v-on="on" icon small @click="onEditRule(i)">
+                            <v-icon small>mdi-pencil</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Edit</span>
+                      </v-tooltip>
+                      <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                          <v-btn
+                            class="me-4"
+                            v-on="on"
+                            color="red"
+                            icon
+                            small
+                            @click="onRemoveRule(i)"
+                          >
+                            <v-icon small>mdi-close</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Remove</span>
+                      </v-tooltip>
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
+            <span v-else>There is no rule yet!</span>
           </v-card-text>
           <v-card-actions v-if="rules.length > 0">
             <v-spacer />
@@ -95,6 +91,15 @@
           <v-card-title>
             <span>History</span>
             <v-spacer />
+            <input id="file" type="file" ref="file" style="display: none" @change="onFileChange" />
+            <v-tooltip right>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" color="green" icon @click="$refs.file.click()">
+                  <v-icon>mdi-upload</v-icon>
+                </v-btn>
+              </template>
+              <span>Upload</span>
+            </v-tooltip>
             <v-tooltip v-if="history.length > 0" right>
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" color="green" icon @click="saveFileAsJson(history)">
@@ -105,69 +110,63 @@
             </v-tooltip>
           </v-card-title>
           <v-card-text>
-            <v-row v-if="history.length > 0">
-              <v-col class="my-0 py-0 d-flex flex-row align-center" cols="12">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon class="ms-1 me-1" v-on="on" small>mdi-clock</v-icon>
-                  </template>
-                  <span>Time</span>
-                </v-tooltip>
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon class="ms-12" v-on="on" small>mdi-close</v-icon>
-                  </template>
-                  <span>Average RMSE</span>
-                </v-tooltip>
-              </v-col>
-
-              <v-col class="my-0 py-0" cols="12" v-for="(item, i) in history" :key="i">
-                <div class="d-flex flex-row align-center">
-                  <span class="ms-1 caption" v-text="item.time" />
-                  <span class="ms-5 caption" v-text="item.average" />
-                  <v-spacer />
-                  <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                      <v-btn color="grey" icon small v-on="on" @click="onShowHistoryDetail(i)">
-                        <v-icon small>mdi-dots-vertical</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Details</span>
-                  </v-tooltip>
-                  <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                      <v-btn
-                        class="me-1"
-                        color="blue"
-                        icon
-                        small
-                        v-on="on"
-                        @click="onRunHistory(i)"
-                      >
-                        <v-icon small>mdi-refresh</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Rerun</span>
-                  </v-tooltip>
-                  <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                      <v-btn
-                        class="me-1"
-                        color="red"
-                        icon
-                        small
-                        v-on="on"
-                        @click="onRemoveHistory(i)"
-                      >
-                        <v-icon small>mdi-close</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Remove</span>
-                  </v-tooltip>
-                </div>
-                <v-divider class="mb-1 py-0" />
-              </v-col>
-            </v-row>
+            <v-simple-table v-if="history.length > 0" height="150" dense fixed-header>
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th class="text-left">Time</th>
+                    <th class="text-left">Avg. RMSE</th>
+                    <th class="text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, i) in history" :key="i">
+                    <td class="text-left" v-text="item.time" />
+                    <td class="text-left" v-text="item.average" />
+                    <td>
+                      <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                          <v-btn color="grey" icon small v-on="on" @click="onShowHistoryDetail(i)">
+                            <v-icon small>mdi-dots-vertical</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Details</span>
+                      </v-tooltip>
+                      <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                          <v-btn
+                            class="me-1"
+                            color="blue"
+                            icon
+                            small
+                            v-on="on"
+                            @click="onRunHistory(i)"
+                          >
+                            <v-icon small>mdi-refresh</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Rerun</span>
+                      </v-tooltip>
+                      <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                          <v-btn
+                            class="me-1"
+                            color="red"
+                            icon
+                            small
+                            v-on="on"
+                            @click="onRemoveHistory(i)"
+                          >
+                            <v-icon small>mdi-close</v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Remove</span>
+                      </v-tooltip>
+                    </td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
             <span v-else>There is no history yet!</span>
           </v-card-text>
           <v-card-actions v-if="history.length > 0">
@@ -216,60 +215,75 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="historyDialog" width="800" scrollable>
+    <v-dialog v-model="historyDialog" width="950" scrollable>
       <v-card v-if="history.length > 0">
         <v-card-title>
           <span class="primary--text" v-text="history[selectedHistoryIndex].time" />
           <v-spacer />
-          <v-btn color="red" icon @click="historyDialog = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+          <v-tooltip right>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" color="red" icon @click="historyDialog = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </template>
+            <span>Close</span>
+          </v-tooltip>
         </v-card-title>
         <v-card-text>
           <v-row>
             <v-col cols="12">
-              <span class="body-1">Each Purposes' RMSE</span>
-              <div class="mt-2 px-5 mb-2 d-flex flex-row justify-space-between align-center">
-                <div
-                  class="me-5 d-flex flex-column align-start"
-                  v-for="(item, i) in history[selectedHistoryIndex].deviations"
-                  :key="i"
-                >
-                  <span class="caption" v-text="purposeList[i]" />
-                  <span class="caption" v-text="item" />
-                </div>
-              </div>
-              <v-divider class="mb-5" />
-              <span class="body-1">WMA Rules</span>
-              <div class="mt-2 px-5 d-flex flex-row justify-space-around">
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon v-on="on">mdi-calendar</v-icon>
-                  </template>
-                  <span>Months Before</span>
-                </v-tooltip>
-                <v-tooltip right>
-                  <template v-slot:activator="{ on }">
-                    <v-icon v-on="on">mdi-star-half</v-icon>
-                  </template>
-                  <span>Weight</span>
-                </v-tooltip>
-              </div>
+              <span class="body-1">Purposes' RMSE</span>
 
-              <div v-for="(item, i) in history[selectedHistoryIndex].rules" :key="i">
-                <div class="mt-2 px-5 d-flex flex-row justify-space-around">
-                  <span class="caption" v-text="item.months" />
-                  <span class="caption" v-text="item.weight" />
-                </div>
-                <v-divider v-if="i != history[selectedHistoryIndex].rules.length - 1" />
-              </div>
+              <v-simple-table class="px-2" dense>
+                <template v-slot:default>
+                  <thead>
+                    <tr>
+                      <th
+                        class="text-left"
+                        v-for="(item, i) in purposeList"
+                        :key="i"
+                        v-text="item"
+                      />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th
+                        class="text-left"
+                        v-for="(item, i) in history[selectedHistoryIndex].deviations"
+                        :key="i"
+                        v-text="item"
+                      />
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table>
+            </v-col>
+            <v-col cols="4">
+              <span class="body-1">WMA Rules</span>
+              <v-simple-table class="px-2" dense fixed-header>
+                <template v-slot:default>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Months Before</th>
+                      <th class="text-left">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in history[selectedHistoryIndex].rules" :key="item.months">
+                      <td v-text="item.months" />
+                      <td v-text="item.weight" />
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table>
             </v-col>
           </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :color="snackbarColor" left bottom>
+    <v-snackbar v-model="snackbar" :color="snackbarColor" bottom right>
       <div class="d-flex flex-row justify-start align-center">
         <v-icon v-text="snackbarIcon" dark />
         <span class="ps-5" v-text="snackbarMessage" />
@@ -378,6 +392,10 @@ export default {
 
         this.showSnackbar("mdi-check", "success", "New rule added!");
       }
+
+      this.rules.sort((a, b) => {
+        return a.months - b.months;
+      });
 
       this.isEditingRule = false;
       this.ruleDialog = false;
@@ -492,7 +510,7 @@ export default {
       // this.history.splice(0, 0, h);
       this.history.push(h);
       this.history.sort((a, b) => {
-        return (a.average - b.average);
+        return a.average - b.average;
       });
     },
     onRun(isHistory) {
@@ -569,13 +587,13 @@ export default {
 
             let row = [];
             for (let j = 1; j < 10; j++) {
-              if (this.purposeSumSource[i][j] == 0) {
-                row.push(1);
-              } else {
-                row.push(
-                  Math.pow(d[j] - this.purposeSumSource[i][j], 2).toFixed(2)
-                );
-              }
+              // if (this.purposeSumSource[i][j] == 0) {
+              //   row.push(1);
+              // } else {
+              row.push(
+                Math.pow(d[j] - this.purposeSumSource[i][j], 2).toFixed(2)
+              );
+              // }
             }
             t.push(row);
           }
@@ -669,6 +687,15 @@ export default {
     },
     onSelectedPurposesChange() {
       this.onRun(true);
+    },
+    onFileChange(event) {
+      let f = event.target.files[0];
+      let fr = new FileReader();
+      fr.onload = () => {
+        this.history = JSON.parse(fr.result);
+        document.getElementById("file").value = "";
+      };
+      fr.readAsText(f);
     },
     saveFileAsJson(obj) {
       const data = JSON.stringify(obj);

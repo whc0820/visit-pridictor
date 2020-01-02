@@ -86,6 +86,7 @@
           </v-card-text>
           <v-card-actions v-if="rules.length > 0">
             <v-spacer />
+            <v-btn color="red" text @click="rules=[]">Clear</v-btn>
             <v-btn color="primary" text @click="onRun(false)">Run</v-btn>
           </v-card-actions>
         </v-card>
@@ -164,11 +165,15 @@
                     <span>Remove</span>
                   </v-tooltip>
                 </div>
-                <v-divider class="mb-1 py-0" v-if="i != history.length - 1" />
+                <v-divider class="mb-1 py-0" />
               </v-col>
             </v-row>
             <span v-else>There is no history yet!</span>
           </v-card-text>
+          <v-card-actions v-if="history.length > 0">
+            <v-spacer />
+            <v-btn color="red" text @click="history=[]">Clear</v-btn>
+          </v-card-actions>
         </v-card>
       </v-col>
 
@@ -226,7 +231,7 @@
               <span class="body-1">Each Purposes' RMSE</span>
               <div class="mt-2 px-5 mb-2 d-flex flex-row justify-space-between align-center">
                 <div
-                  class="me-5 d-flex flex-column align-center"
+                  class="me-5 d-flex flex-column align-start"
                   v-for="(item, i) in history[selectedHistoryIndex].deviations"
                   :key="i"
                 >
@@ -476,7 +481,7 @@ export default {
       for (let deviation of deviations) {
         sum += parseFloat(deviation);
       }
-      let avg =  (sum / deviations.length).toFixed(2);
+      let avg = (sum / deviations.length).toFixed(2);
 
       let h = {
         time: time,
@@ -484,7 +489,11 @@ export default {
         average: avg,
         deviations: deviations
       };
-      this.history.splice(0, 0, h);
+      // this.history.splice(0, 0, h);
+      this.history.push(h);
+      this.history.sort((a, b) => {
+        return (a.average - b.average);
+      });
     },
     onRun(isHistory) {
       this.drawPurposes();
@@ -564,11 +573,7 @@ export default {
                 row.push(1);
               } else {
                 row.push(
-                  Math.pow(
-                    (d[j] - this.purposeSumSource[i][j]) /
-                      this.purposeSumSource[i][j],
-                    2
-                  ).toFixed(2)
+                  Math.pow(d[j] - this.purposeSumSource[i][j], 2).toFixed(2)
                 );
               }
             }

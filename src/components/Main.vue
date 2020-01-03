@@ -29,7 +29,7 @@
             <v-tooltip right>
               <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon @click="ruleDialog = true">
-                  <v-icon color="success">mdi-plus</v-icon>
+                  <v-icon color="green">mdi-plus</v-icon>
                 </v-btn>
               </template>
               <span>Add</span>
@@ -42,13 +42,23 @@
                   <tr>
                     <th class="text-left">Months Before</th>
                     <th class="text-left">Weight</th>
-                    <th class>Actions</th>
+                    <th class="text-left">Percentage</th>
+                    <th class="text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(item, i) in rules" :key="i">
                     <td v-text="item.months" />
                     <td v-text="item.weight" />
+                    <td>
+                      <v-progress-circular
+                        size="20"
+                        rotate="-90"
+                        :value="item.percentage"
+                        :color="getPercentageColor(item.percentage)"
+                      />
+                      <span class="ms-2" v-text="`${item.percentage}%`" />
+                    </td>
                     <td>
                       <v-tooltip right>
                         <template v-slot:activator="{ on }">
@@ -267,12 +277,22 @@
                     <tr>
                       <th class="text-left">Months Before</th>
                       <th class="text-left">Weight</th>
+                      <th class="text-left">Percentage</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="item in history[selectedHistoryIndex].rules" :key="item.months">
                       <td v-text="item.months" />
                       <td v-text="item.weight" />
+                      <td>
+                        <v-progress-circular
+                          size="20"
+                          rotate="-90"
+                          :value="item.percentage"
+                          :color="item.percentage"
+                        />
+                        <span class="ms-2" v-text="`${item.percentage}%`" />
+                      </td>
                     </tr>
                   </tbody>
                 </template>
@@ -346,6 +366,16 @@ export default {
       this.snackbarColor = color;
       this.snackbarMessage = msg;
     },
+    calculateRulesPercentage() {
+      let weights = 0;
+      for (let rule of this.rules) {
+        weights += parseInt(rule.weight);
+      }
+
+      for (let rule of this.rules) {
+        rule.percentage = (rule.weight / weights).toFixed(2) * 100;
+      }
+    },
     onEditRule(index) {
       this.isEditingRule = true;
       this.ruleDialog = true;
@@ -393,15 +423,14 @@ export default {
         this.showSnackbar("mdi-check", "success", "New rule added!");
       }
 
-      this.rules.sort((a, b) => {
-        return a.months - b.months;
-      });
+      this.calculateRulesPercentage();
 
       this.isEditingRule = false;
       this.ruleDialog = false;
     },
     onRemoveRule(index) {
       this.rules.splice(index, 1);
+      this.calculateRulesPercentage();
     },
     drawPurposes() {
       let maxMonths = 0;
@@ -723,6 +752,17 @@ export default {
         null
       );
       a.dispatchEvent(e);
+    },
+    getPercentageColor(percentage) {
+      if (percentage < 25) {
+        return "green";
+      } else if (percentage < 50) {
+        return "orange";
+      } else if (percentage < 75) {
+        return "red";
+      } else {
+        return "deep-purple";
+      }
     }
   },
   created() {

@@ -235,7 +235,6 @@
           <v-row>
             <v-col cols="12">
               <span class="body-1">Purposes' RMSE</span>
-
               <v-simple-table class="px-2" dense>
                 <template v-slot:default>
                   <thead>
@@ -261,7 +260,7 @@
                 </template>
               </v-simple-table>
             </v-col>
-            <v-col cols="4">
+            <v-col cols="6">
               <span class="body-1">WMA Rules</span>
               <v-simple-table class="px-2" dense fixed-header>
                 <template v-slot:default>
@@ -365,7 +364,7 @@ export default {
       }
 
       for (let rule of this.rules) {
-        rule.percentage = (rule.weight / weights).toFixed(2) * 100;
+        rule.percentage = ((rule.weight / weights) * 100).toFixed(1);
       }
     },
     onEditRule(index) {

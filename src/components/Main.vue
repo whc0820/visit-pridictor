@@ -193,14 +193,6 @@
             <GChart type="LineChart" :data="chartData1" :options="chartOptions" />
           </v-card-text>
         </v-card>
-
-        <!-- <v-card class="mt-5" v-if="chartData3.length > 0">
-          <v-card-title>Predict By Rules</v-card-title>
-          <v-card-text>
-            <GChart type="LineChart" :data="chartData3" :options="chartOptions" />
-          </v-card-text>
-        </v-card>-->
-
         <v-card class="mt-5">
           <v-card-title>Summarize</v-card-title>
           <v-card-text>
@@ -289,7 +281,7 @@
                           size="20"
                           rotate="-90"
                           :value="item.percentage"
-                          :color="item.percentage"
+                          :color="getPercentageColor(item.percentage)"
                         />
                         <span class="ms-2" v-text="`${item.percentage}%`" />
                       </td>
@@ -721,7 +713,29 @@ export default {
       let f = event.target.files[0];
       let fr = new FileReader();
       fr.onload = () => {
-        this.history = JSON.parse(fr.result);
+        let uploadJson = JSON.parse(fr.result);
+
+        let formatKey = ["time", "rules", "average", "deviations"];
+        let isValid = true;
+        for (let rule of uploadJson) {
+          let keys = Object.keys(rule);
+          for (let i in keys) {
+            if (keys[i] != formatKey[i]) {
+              isValid = false;
+              break;
+            }
+          }
+        }
+
+        if (isValid) {
+          this.history = uploadJson;
+        } else {
+          this.showSnackbar(
+            "mdi-alert",
+            "error",
+            "Failed To Read Upload File!"
+          );
+        }
         document.getElementById("file").value = "";
       };
       fr.readAsText(f);

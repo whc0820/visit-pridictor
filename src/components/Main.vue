@@ -536,11 +536,13 @@ export default {
       }
 
       let source = [];
-      for (let i in this.purposeSumSource) {
+      for (let i = 0; i < this.purposeSumSource.length; i++) {
         if (i > maxMonths) {
           let s = 0;
-          for (let d of this.purposeSumSource[i]) {
-            s += parseInt(d);
+          for (let j in this.purposeSumSource[i]) {
+            if (j > 0) {
+              s += parseInt(this.purposeSumSource[i][j]);
+            }
           }
           source.push(s);
         }
@@ -550,11 +552,12 @@ export default {
       for (let i in predicts) {
         if (i > 0) {
           let s = 0;
-          for (let d of predicts[i]) {
-            s += parseFloat(d);
+          for (let j in predicts[i]) {
+            if (j > 0) {
+              s += parseFloat(predicts[i][j]);
+            }
           }
           predict.push(s);
-          predicts[i][i] - this.purposeSumSource[i + maxMonths];
         }
       }
 

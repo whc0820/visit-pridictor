@@ -36,6 +36,11 @@
             </v-tooltip>
           </v-card-title>
           <v-card-text>
+            <span
+              class="mb-2"
+              v-if="rules.length > 0"
+              v-text="`Starts Month: ${periods[rules[rules.length - 1].months]}`"
+            />
             <v-simple-table v-if="rules.length > 0" height="150" fixed-header dense>
               <template v-slot:default>
                 <thead>
@@ -125,14 +130,14 @@
                 <thead>
                   <tr>
                     <th class="text-left">Time</th>
-                    <th class="text-left">Avg. RMSE</th>
+                    <th class="text-left">Sum. RMSE</th>
                     <th class="text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(item, i) in history" :key="i">
                     <td class="text-left" v-text="item.time" />
-                    <td class="text-left" v-text="item.average" />
+                    <td class="text-left" v-text="item.summarize" />
                     <td>
                       <v-tooltip right>
                         <template v-slot:activator="{ on }">
@@ -233,6 +238,10 @@
         </v-card-title>
         <v-card-text>
           <v-row>
+            <v-col class="d-flex flex-column" cols="12">
+              <span class="body-1">Summarized RMSE</span>
+              <span class="caption" v-text="history[selectedHistoryIndex].summarize" />
+            </v-col>
             <v-col cols="12">
               <span class="body-1">Purposes' RMSE</span>
               <v-simple-table class="px-2" dense>
@@ -307,6 +316,7 @@
 export default {
   data() {
     return {
+      periods: [],
       snackbar: false,
       snackbarMessage: "",
       snackbarColor: "success",
@@ -415,6 +425,9 @@ export default {
       }
 
       this.calculateRulesPercentage();
+      this.rules.sort((a, b) => {
+        return a.months - b.months;
+      });
 
       this.isEditingRule = false;
       this.ruleDialog = false;
@@ -498,7 +511,7 @@ export default {
     onRemoveHistory(index) {
       this.history.splice(index, 1);
     },
-    addNewHistory(deviations) {
+    addNewHistory(predicts, deviations) {
       let date = new Date();
       let hours = date.getHours();
       let mins = date.getMinutes();
@@ -515,22 +528,53 @@ export default {
       }
       let time = `${hours}:${mins}:${secs}`;
 
-      let sum = 0;
-      for (let deviation of deviations) {
-        sum += parseFloat(deviation);
+      let maxMonths = 0;
+      for (let rule of this.rules) {
+        if (rule.months > maxMonths) {
+          maxMonths = rule.months;
+        }
       }
-      let avg = (sum / deviations.length).toFixed(2);
+
+      let source = [];
+      for (let i in this.purposeSumSource) {
+        if (i > maxMonths) {
+          let s = 0;
+          for (let d of this.purposeSumSource[i]) {
+            s += parseInt(d);
+          }
+          source.push(s);
+        }
+      }
+
+      let predict = [];
+      for (let i in predicts) {
+        if (i > 0) {
+          let s = 0;
+          for (let d of predicts[i]) {
+            s += parseFloat(d);
+          }
+          predict.push(s);
+          predicts[i][i] - this.purposeSumSource[i + maxMonths];
+        }
+      }
+
+      let sum = 0;
+      for (let i in source) {
+        sum += Math.pow(predict[i] - source[i], 2);
+      }
+
+      let sumRMSE = Math.sqrt(sum / source.length).toFixed(2);
 
       let h = {
         time: time,
         rules: JSON.parse(JSON.stringify(this.rules)),
-        average: avg,
+        summarize: sumRMSE,
         deviations: deviations
       };
       // this.history.splice(0, 0, h);
       this.history.push(h);
       this.history.sort((a, b) => {
-        return a.average - b.average;
+        return a.summarize - b.summarize;
       });
     },
     onRun(isHistory) {
@@ -633,10 +677,6 @@ export default {
         deviations[i] = Math.sqrt(deviations[i]).toFixed(2);
       }
 
-      if (!isHistory) {
-        this.addNewHistory(deviations);
-      }
-
       // Filter Selected Purposes
       let indexs = [];
       for (let purpose of this.purposeList) {
@@ -664,6 +704,7 @@ export default {
           addtionalColumns.push(this.chartData3[0][i] + " Predict");
         }
       }
+
       for (let i in this.chartData1) {
         if (i == 0) {
           for (let a of addtionalColumns) {
@@ -700,6 +741,10 @@ export default {
           this.chartData2.push(row);
         }
       }
+
+      if (!isHistory) {
+        this.addNewHistory(data, deviations);
+      }
     },
     onRunHistory(index) {
       this.rules = this.history[index].rules;
@@ -714,7 +759,7 @@ export default {
       fr.onload = () => {
         let uploadJson = JSON.parse(fr.result);
 
-        let formatKey = ["time", "rules", "average", "deviations"];
+        let formatKey = ["time", "rules", "summarize", "deviations"];
         let isValid = true;
         for (let rule of uploadJson) {
           let keys = Object.keys(rule);
@@ -780,19 +825,19 @@ export default {
   },
   created() {
     let residences = [];
-    let periods = [];
+    this.periods = [];
     for (let item of this.source) {
       if (!residences.includes(item.Residence)) {
         residences.push(item.Residence);
       }
 
-      if (!periods.includes(item.Period)) {
-        periods.push(item.Period);
+      if (!this.periods.includes(item.Period)) {
+        this.periods.push(item.Period);
       }
     }
 
     let items = [];
-    for (let period of periods) {
+    for (let period of this.periods) {
       let obj = {};
       obj["Period"] = period;
       for (let purpose of this.purposeList) {

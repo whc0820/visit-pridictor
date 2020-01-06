@@ -373,14 +373,23 @@ export default {
         weights += parseInt(rule.weight);
       }
 
-      if (this.rules.length == 1) {
-        this.rules[0].percentage = 100;
+      let isAllZero = true;
+      for (let rule of this.rules) {
+        if (rule.weight != 0) {
+          isAllZero = false;
+          break;
+        }
+      }
+
+      if (isAllZero) {
+        for (let rule of this.rules) {
+          rule.percentage = (100 / this.rules.length).toFixed(1);
+        }
       } else {
         for (let rule of this.rules) {
           rule.percentage = ((rule.weight / weights) * 100).toFixed(1);
-          }
+        }
       }
-      
     },
     onEditRule(index) {
       this.isEditingRule = true;

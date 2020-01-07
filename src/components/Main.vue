@@ -1,7 +1,7 @@
 <template>
   <v-content class="mt-2 px-5">
     <v-row>
-      <v-col class="d-flex flex-column" cols="3">
+      <v-col class="d-flex flex-column d-sm-12" cols="12" lg="4">
         <v-card class="mb-5">
           <v-card-title>
             <span>Purposes</span>
@@ -57,6 +57,7 @@
                     <td v-text="item.weight" />
                     <td>
                       <v-progress-circular
+                        class="hidden-xs-only"
                         size="20"
                         rotate="-90"
                         :value="item.percentage"
@@ -64,7 +65,7 @@
                       />
                       <span class="ms-2" v-text="`${item.percentage}%`" />
                     </td>
-                    <td>
+                    <td class="d-flex flex-row justify-start">
                       <v-tooltip right>
                         <template v-slot:activator="{ on }">
                           <v-btn color="blue" v-on="on" icon small @click="onEditRule(i)">
@@ -75,14 +76,7 @@
                       </v-tooltip>
                       <v-tooltip right>
                         <template v-slot:activator="{ on }">
-                          <v-btn
-                            class="me-4"
-                            v-on="on"
-                            color="red"
-                            icon
-                            small
-                            @click="onRemoveRule(i)"
-                          >
+                          <v-btn v-on="on" color="red" icon small @click="onRemoveRule(i)">
                             <v-icon small>mdi-close</v-icon>
                           </v-btn>
                         </template>
@@ -93,7 +87,9 @@
                 </tbody>
               </template>
             </v-simple-table>
-            <span v-else>There is no rule yet!</span>
+            <div class="d-flex flew-row align-center" v-else>
+              <span>There is no rule yet!</span>
+            </div>
           </v-card-text>
           <v-card-actions v-if="rules.length > 0">
             <v-spacer />
@@ -138,7 +134,7 @@
                   <tr v-for="(item, i) in history" :key="i">
                     <td class="text-left" v-text="item.time" />
                     <td class="text-left" v-text="item.summarize" />
-                    <td>
+                    <td class="d-flex flex-row">
                       <v-tooltip right>
                         <template v-slot:activator="{ on }">
                           <v-btn color="grey" icon small v-on="on" @click="onShowHistoryDetail(i)">
@@ -184,14 +180,20 @@
             </v-simple-table>
             <span v-else>There is no history yet!</span>
           </v-card-text>
-          <v-card-actions v-if="history.length > 0">
-            <v-spacer />
-            <v-btn color="red" text @click="history=[]">Clear</v-btn>
+          <v-card-actions>
+            <template v-if="history.length > 0">
+              <v-spacer />
+              <v-btn color="red" text @click="history=[]">Clear</v-btn>
+            </template>
+            <template v-else>
+              <v-spacer />
+              <v-btn color="deep-purple" text @click="onAutoPredict">Auto Run</v-btn>
+            </template>
           </v-card-actions>
         </v-card>
       </v-col>
 
-      <v-col class="d-flex flex-column" cols="9">
+      <v-col class="d-flex flex-column d-sm-12" cols="12" lg="8">
         <v-card>
           <v-card-title>Visitors By Purposes</v-card-title>
           <v-card-text>
@@ -269,7 +271,7 @@
                 </template>
               </v-simple-table>
             </v-col>
-            <v-col cols="6">
+            <v-col cols="12" lg="6" md="8" sm="10">
               <span class="body-1">WMA Rules</span>
               <v-simple-table class="px-2" dense fixed-header>
                 <template v-slot:default>
@@ -286,6 +288,7 @@
                       <td v-text="item.weight" />
                       <td>
                         <v-progress-circular
+                          class="hidden-xs-only"
                           size="20"
                           rotate="-90"
                           :value="item.percentage"
@@ -354,7 +357,8 @@ export default {
         "Unstated"
       ],
       selectedPurposes: ["Business"],
-      history: []
+      history: [],
+      array: "no data yet!"
     };
   },
   props: {
@@ -373,15 +377,7 @@ export default {
         weights += parseInt(rule.weight);
       }
 
-      let isAllZero = true;
-      for (let rule of this.rules) {
-        if (rule.weight != 0) {
-          isAllZero = false;
-          break;
-        }
-      }
-
-      if (isAllZero) {
+      if (weights == 0) {
         for (let rule of this.rules) {
           rule.percentage = (100 / this.rules.length).toFixed(1);
         }
@@ -837,6 +833,102 @@ export default {
         return "red";
       } else {
         return "deep-purple";
+      }
+    },
+    generateAllCases() {
+      let array = [];
+      for (let a = 0; a <= 5; a++) {
+        for (let b = 0; b <= 5; b++) {
+          for (let c = 0; c <= 5; c++) {
+            // for (let d = 0; d <= 10; d++) {
+            //   for (let e = 0; e <= 10; e++) {
+            //     for (let f = 0; f <= 10; f++) {
+            let weights = a + b + c;
+            if (weights == 0) {
+              array.push([
+                {
+                  months: 1,
+                  weight: a,
+                  percentage: ((weights / 3) * 100).toFixed(1)
+                },
+                {
+                  months: 2,
+                  weight: b,
+                  percentage: ((weights / 3) * 100).toFixed(1)
+                },
+                {
+                  months: 3,
+                  weight: c,
+                  percentage: ((weights / 3) * 100).toFixed(1)
+                }
+                // {
+                //   months: 4,
+                //   weight: d,
+                //   percentage: (weights / 4).toFixed(1)
+                // },
+                // {
+                //   months: 5,
+                //   weight: e,
+                //   percentage: (weights / 6).toFixed(1)
+                // },
+                // {
+                //   months: 6,
+                //   weight: f,
+                //   percentage: (weights / 6).toFixed(1)
+                // }
+              ]);
+            } else {
+              array.push([
+                {
+                  months: 1,
+                  weight: a,
+                  percentage: ((a / weights) * 100).toFixed(1)
+                },
+                {
+                  months: 2,
+                  weight: b,
+                  percentage: ((b / weights) * 100).toFixed(1)
+                },
+                {
+                  months: 3,
+                  weight: c,
+                  percentage: ((c / weights) * 100).toFixed(1)
+                }
+                // {
+                //   months: 4,
+                //   weight: d,
+                //   percentage: ((d / weights) * 100).toFixed(1)
+                // },
+                // {
+                //   months: 5,
+                //   weight: e,
+                //   percentage: ((e / weights) * 100).toFixed(1)
+                // },
+                // {
+                //   months: 6,
+                //   weight: f,
+                //   percentage: ((f / weights) * 100).toFixed(1)
+                // }
+              ]);
+              //     }
+              //   }
+              // }
+            }
+          }
+        }
+      }
+      return array;
+    },
+    async onAutoPredict() {
+      this.array = await this.generateAllCases();
+      this.recursive(0);
+    },
+    async recursive(i) {
+      this.rules = this.array[i];
+      await this.onRun(false);
+
+      if (i != this.array.length) {
+        this.recursive(i + 1);
       }
     }
   },

@@ -1,4 +1,4 @@
-# visit-pridictor
+# visitor-predictor
 
 ## Project setup
 ```

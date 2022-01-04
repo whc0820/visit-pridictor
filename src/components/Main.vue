@@ -45,7 +45,7 @@
               <template v-slot:default>
                 <thead>
                   <tr>
-                    <th class="text-left">Months Before</th>
+                    <th class="text-left">Months Beforea</th>
                     <th class="text-left">Weight</th>
                     <th class="text-left">Percentage</th>
                     <th class="text-left">Actions</th>

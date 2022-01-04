@@ -187,7 +187,7 @@
             </template>
             <template v-else>
               <v-spacer />
-              <v-btn color="deep-purple" text @click="onAutoPredict">Auto Run</v-btn>
+              <v-btn color="deep-purple" disabled text @click="onAutoPredict">Auto Run</v-btn>
             </template>
           </v-card-actions>
         </v-card>
